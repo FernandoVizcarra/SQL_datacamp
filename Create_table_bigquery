@@ -1,0 +1,13 @@
+CREATE TABLE `peya-peru.user_fernando_vizcarra.datacamp_progres` (
+  student_id INT64,
+  email ARRAY<STRING>,
+  test_scores ARRAY<INT64>
+);
+
+INSERT INTO `peya-peru.user_fernando_vizcarra.datacamp_progres`
+  VALUES (1,
+  [ "work1@datacamp.com", "other1@datacamp.com" ],
+  [92, 85, 96, 88]);
+
+select *
+from `peya-peru.user_fernando_vizcarra.datacamp_progres`

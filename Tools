@@ -1,3 +1,25 @@
+## USO DE RANK AND OVER
+
+WITH aggregated_data AS (
+  SELECT 
+    registered_date,
+    SUM(gpo) AS total_gpo_per_day -- gpo per day
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE franchise = 'Tottus'
+  GROUP BY registered_date
+)
+SELECT 
+  registered_date,
+  total_gpo_per_day,
+  AVG(total_gpo_per_day) OVER() AS gp_total, -- avg gpo total
+  RANK() OVER(ORDER BY registered_date DESC) AS order_2, -- rank for registered_date
+  AVG(total_gpo_per_day) OVER(ORDER BY registered_date ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING) AS prom
+
+FROM aggregated_data
+ORDER BY registered_date DESC;
+
+
+
 --WITH base_raw as (
 --  SELECT registered_date, partner_id, count(distinct orders) as orders
 --  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`

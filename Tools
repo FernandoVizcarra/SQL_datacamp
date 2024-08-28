@@ -1,0 +1,133 @@
+--WITH base_raw as (
+--  SELECT registered_date, partner_id, count(distinct orders) as orders
+--  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+--  WHERE type_vertical = "Local Stores"
+--  GROUP BY 1,2
+--)
+
+## USO DE ORDER BY
+--select *, ROW_NUMBER() OVER(ORDER BY registered_date DESC, PARTNER_ID asc) AS Row_N
+--from base_raw
+--WHERE partner_id = 421587
+
+# USO DE LAG
+--SELECT *, LAG(orders, 1) OVER(ORDER BY registered_date) as last_day_orders
+--from base_raw
+--WHERE partner_id = 421587
+--ORDER BY 1 DESC
+
+# USO DE PARTITION BY
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id,hora, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  GROUP BY 1,2,3
+)
+Select *, ROW_NUMBER() OVER(PARTITION BY partner_id,registered_date  order by hora desc) as  unique
+from base_raw
+ORDER BY 1,2,3 DESC
+*/
+
+# USO DE RANK, ROW_NUMBER, DENSE_RANK, sin partition BY
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  GROUP BY 1,2
+)
+Select *,
+  ROW_NUMBER() OVER(order by partner_id desc) as  row_number_,
+  RANK() OVER(order by partner_id desc) as  rank_,
+  DENSE_RANK() OVER(order by partner_id desc) as  dense_rank_
+from base_raw
+WHERE registered_date between "2024-01-01" and "2024-01-05"
+ORDER BY 2 DESC
+*/
+
+# USO DE RANK, ROW_NUMBER, DENSE_RANK, sin partition BY
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id,hora, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  GROUP BY 1,2,3
+)
+Select *,
+  ROW_NUMBER() OVER(PARTITION BY partner_id order by registered_date desc) as  row_number_,
+  RANK() OVER(PARTITION BY partner_id order by registered_date desc) as  rank_,
+  DENSE_RANK() OVER(PARTITION BY partner_id order by registered_date desc) as  dense_rank_
+from base_raw
+WHERE registered_date between "2024-01-01" and "2024-01-05"
+ORDER BY 1,2,3 DESC
+*/
+
+# USO DE PAGING
+/*
+WITH base_raw as (
+  SELECT distinct partner_id
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+)
+Select partner_id, NTILE(4) OVER(ORDER BY partner_id DESC) AS Page
+from base_raw
+order by Page ASC
+*/
+
+# USO DE MAX() Y SUM()
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  AND registered_date between "2024-01-01" and "2024-01-05"
+  AND partner_id IN (460223,462621,440067)
+  GROUP BY 1,2
+)
+--Select registered_date, partner_id, orders, MAX(orders) OVER(ORDER BY registered_date DESC) AS Max_orders
+Select registered_date, partner_id, orders, SUM(orders) OVER(PARTITION BY partner_id ORDER BY registered_date DESC) AS Sum_orders
+from base_raw
+order by 2 desc
+*/
+
+# USO DE FRAME - RAW and RANGE
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  AND registered_date between "2024-01-01" and "2024-01-05"
+  AND partner_id IN (460223,462621,440067)
+  GROUP BY 1,2
+)
+--Select registered_date, partner_id, orders, MAX(orders) OVER(ORDER BY registered_date DESC) AS Max_orders
+Select registered_date, partner_id, orders,
+  AVG(orders) OVER(
+                    PARTITION BY partner_id
+                    ORDER BY registered_date DESC
+                    ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+                  ) AS Sum_orders
+from base_raw
+order by 2 desc
+*/
+
+# PIVOT - CROSSTAB
+
+--CREATE EXTENSION IF NO EXISTS table_func;
+/*
+WITH base_raw as (
+  SELECT registered_date, partner_id, count(distinct orders) as orders
+  FROM `peya-peru.user_fernando_vizcarra.busines_ls_dashboard`
+  WHERE type_vertical = "Local Stores"
+  AND registered_date between "2024-01-01" and "2024-01-05"
+  AND partner_id IN (460223,462621,440067)
+  GROUP BY 1,2
+)
+
+SELECT * 
+FROM base_raw
+PIVOT(
+  SUM(orders)
+  FOR partner_id IN (460223,462621,440067)
+)*/
